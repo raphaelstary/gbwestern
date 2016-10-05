@@ -1,6 +1,12 @@
 window.onload = function () {
     "use strict";
 
-    var app = H5.Bootstrapper.build(G.MyGameResources, G.installMyScenes);
-    app.start();
+    H5.Bootstrapper
+        .keyBoard()
+        .gamePad()
+        .lowRez(G.UI.WIDTH, G.UI.HEIGHT)
+        .responsive()
+        .fullScreen()
+        .build(G.MyGameResources, G.installMyScenes)
+        .start();
 };

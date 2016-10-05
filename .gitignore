@@ -44,7 +44,7 @@ build/config/buildinfo.properties
 
 www-built
 www-ghdeploy
-*/lib
+www/js/lib
 node_modules
 www/sandbox*
 www/gfx/test*
@@ -53,3 +53,4 @@ atlas_*.json
 audio.json
 audio.mp3
 audio.ogg
+scenes.json

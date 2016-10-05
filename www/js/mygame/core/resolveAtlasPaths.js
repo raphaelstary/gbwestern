@@ -1,51 +1,15 @@
-G.resolveAtlasPaths = (function (ATLAS_BASE_NAME, GFX_PATH, DATA_PATH, GFX_FORMAT, DATA_FORMAT) {
+G.resolveAtlasPaths = (function (ATLAS_BASE_NAME, GFX_PATH, DATA_PATH, GFX_FORMAT, DATA_FORMAT, UI) {
     "use strict";
 
     var atlases = [
         {
-            size: 320,
-            count: 1
-        }, {
-            size: 480,
-            count: 1
-        }, {
-            size: 600,
-            count: 1
-        }, {
-            size: 614,
-            count: 1
-        }, {
-            size: 720,
-            count: 1
-        }, {
-            size: 768,
-            count: 1
-        }, {
-            size: 800,
-            count: 1
-        }, {
-            size: 864,
-            count: 1
-        }, {
-            size: 900,
-            count: 1
-        }, {
-            size: 960,
-            count: 1
-        }, {
-            size: 1024,
-            count: 1
-        }, {
-            size: 1050,
-            count: 1
-        }, {
-            size: 1080,
+            size: UI.HEIGHT,
             count: 1
         }
     ];
 
-    function getFileName(i, size) {
-        return ATLAS_BASE_NAME + '_' + i + '_' + size;
+    function getFileName(i) {
+        return ATLAS_BASE_NAME + '_' + i;
     }
 
     function getFileNames(size, count) {
@@ -90,4 +54,4 @@ G.resolveAtlasPaths = (function (ATLAS_BASE_NAME, GFX_PATH, DATA_PATH, GFX_FORMA
     }
 
     return resolveAtlasPaths;
-})();
+})(G.File.ATLAS_BASE_NAME, G.File.GFX_PATH, G.File.DATA_PATH, G.File.GFX_FORMAT, G.File.DATA_FORMAT, G.UI);
