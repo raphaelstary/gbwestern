@@ -1,3 +1,4 @@
 G.Scene = {
-    START: 'start'
+    START: 'start',
+    GAME: 'game'
 };
