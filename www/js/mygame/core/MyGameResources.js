@@ -2,15 +2,13 @@ G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, resol
     "use strict";
 
     // your files
-    var scenes, atlases = [], level;
-
+    var scenes, atlases = [];
     function registerFiles(resourceLoader) {
         // add your files to the resource loader for downloading
         var isMobile = new DeviceInfo(userAgent, 1, 1, 1).isMobile;
         AtlasResourceHelper.register(resourceLoader, atlases, isMobile, resolveAtlasPaths);
 
         scenes = resourceLoader.addJSON(File.SCENES);
-        level = resourceLoader.addJSON(File.LEVEL);
 
         return resourceLoader.getCount(); // number of registered files
     }
@@ -20,8 +18,7 @@ G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, resol
         return {
             // services created with downloaded files
             gfxCache: AtlasResourceHelper.processLowRez(atlases, UI.WIDTH, UI.HEIGHT),
-            scenes: scenes,
-            level: level
+            scenes: scenes
         };
     }
 

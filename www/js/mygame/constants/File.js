@@ -5,6 +5,5 @@ G.File = {
     GFX_FORMAT: '.png',
     DATA_FORMAT: '.json',
 
-    SCENES: 'data/scenes.json',
-    LEVEL: 'data/level.json'
+    SCENES: 'data/scenes.json'
 };
