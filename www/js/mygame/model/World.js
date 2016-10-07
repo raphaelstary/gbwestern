@@ -1,4 +1,4 @@
-G.World = (function (Math) {
+G.World = (function (Math, Vectors) {
     "use strict";
 
     function World(view, camera, shaker, entities) {
@@ -9,6 +9,8 @@ G.World = (function (Math) {
         this.player = entities.player;
         this.statics = entities.statics;
         this.npcs = entities.npcs;
+
+        this.__isAiming = false;
     }
 
     World.prototype.updateCamera = function () {
@@ -48,6 +50,9 @@ G.World = (function (Math) {
 
         this.__setPlayerX(player.x + forceX);
         this.__setPlayerY(player.y + forceY);
+
+        if ((forceX != 0 || forceY != 0) && !this.__isAiming)
+            this.player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
     };
 
     World.prototype.__setPlayerX = function (x) {
@@ -90,4 +95,4 @@ G.World = (function (Math) {
     };
 
     return World;
-})(Math);
+})(Math, H5.Vectors);
