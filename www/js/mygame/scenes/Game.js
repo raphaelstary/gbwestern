@@ -38,6 +38,7 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
 
         this.keyBoardControls = installPlayerKeyBoard(this.events, this.controller);
         this.gamePadControls = installPlayerGamePad(this.events, this.controller);
+        this.controls = this.events.subscribe(Event.TICK_POST_INPUT, this.controller.update.bind(this.controller));
 
         this.playerMovement = this.events.subscribe(Event.TICK_MOVE, this.world.updatePlayer.bind(this.world));
         this.npcMovement = this.events.subscribe(Event.TICK_MOVE, this.world.updateNPCs.bind(this.world));
@@ -56,6 +57,7 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
     Game.prototype.preDestroy = function () {
         this.events.unsubscribe(this.keyBoardControls);
         this.events.unsubscribe(this.gamePadControls);
+        this.events.unsubscribe(this.controls);
 
         this.events.unsubscribe(this.playerMovement);
         this.events.unsubscribe(this.npcMovement);

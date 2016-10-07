@@ -6,74 +6,63 @@ G.installPlayerGamePad = (function (Event) {
         var rightPressed = false;
         var upPressed = false;
         var downPressed = false;
-        var enterPressed = false;
-        var escapePressed = false;
-
-        function leftCallback() {
-            if (!leftPressed)
-                return;
-            playerController.handleKeyLeft(leftCallback);
-        }
-
-        function rightCallback() {
-            if (!rightPressed)
-                return;
-            playerController.handleKeyRight(rightCallback);
-        }
-
-        function upCallback() {
-            if (!upPressed)
-                return;
-            playerController.handleKeyUp(upCallback);
-        }
-
-        function downCallback() {
-            if (!downPressed)
-                return;
-            playerController.handleKeyDown(downCallback);
-        }
+        var actionPressed = false;
+        var altActionPressed = false;
+        var menuPressed = false;
 
         return events.subscribe(Event.GAME_PAD, function (gamePad) {
             if (gamePad.isDPadLeftPressed() && !leftPressed) {
                 leftPressed = true;
-                playerController.handleKeyLeft(leftCallback);
+                playerController.handleLeftKeyDown();
             } else if (!gamePad.isDPadLeftPressed() && leftPressed) {
                 leftPressed = false;
+                playerController.handleLeftKeyUp();
             }
 
             if (gamePad.isDPadRightPressed() && !rightPressed) {
                 rightPressed = true;
-                playerController.handleKeyRight(rightCallback);
+                playerController.handleRightKeyDown();
             } else if (!gamePad.isDPadRightPressed() && rightPressed) {
                 rightPressed = false;
+                playerController.handleRightKeyUp();
             }
 
             if (gamePad.isDPadUpPressed() && !upPressed) {
                 upPressed = true;
-                playerController.handleKeyUp(upCallback);
+                playerController.handleUpKeyDown();
             } else if (!gamePad.isDPadUpPressed() && upPressed) {
                 upPressed = false;
+                playerController.handleUpKeyUp();
             }
 
             if (gamePad.isDPadDownPressed() && !downPressed) {
                 downPressed = true;
-                playerController.handleKeyDown(downCallback);
+                playerController.handleDownKeyDown();
             } else if (!gamePad.isDPadDownPressed() && downPressed) {
                 downPressed = false;
+                playerController.handleDownKeyUp();
             }
 
-            if (gamePad.isAPressed() && !enterPressed) {
-                enterPressed = true;
+            if (gamePad.isAPressed() && !actionPressed) {
+                actionPressed = true;
                 playerController.handleActionKey();
-            } else if (!gamePad.isAPressed() && enterPressed) {
-                enterPressed = false;
+            } else if (!gamePad.isAPressed() && actionPressed) {
+                actionPressed = false;
             }
 
-            if (gamePad.isStartPressed() && !escapePressed) {
-                escapePressed = true;
+            var isAltActionKey = gamePad.isBPressed() || gamePad.isXPressed();
+            if (isAltActionKey && !altActionPressed) {
+                altActionPressed = true;
+                playerController.handleAltActionKey();
+            } else if (!isAltActionKey && altActionPressed) {
+                altActionPressed = false;
+            }
+
+            if (gamePad.isStartPressed() && !menuPressed) {
+                menuPressed = true;
                 playerController.handleMenuKey();
-            } else if (!gamePad.isStartPressed() && escapePressed) {
-                escapePressed = false;
+            } else if (!gamePad.isStartPressed() && menuPressed) {
+                menuPressed = false;
             }
         });
     }

@@ -6,7 +6,59 @@ G.PlayerController = (function () {
         this.world = world;
 
         this.__paused = false;
+
+        this.__leftPressed = false;
+        this.__rightPressed = false;
+        this.__downPressed = false;
+        this.__upPressed = false;
     }
+
+    PlayerController.prototype.update = function () {
+        if (this.__leftPressed) {
+            this.handleLeftKey();
+        }
+        if (this.__rightPressed) {
+            this.handleRightKey();
+        }
+        if (this.__downPressed) {
+            this.handleDownKey();
+        }
+        if (this.__upPressed) {
+            this.handleUpKey();
+        }
+    };
+
+    PlayerController.prototype.handleLeftKeyDown = function () {
+        this.__leftPressed = true;
+    };
+
+    PlayerController.prototype.handleRightKeyDown = function () {
+        this.__rightPressed = true;
+    };
+
+    PlayerController.prototype.handleUpKeyDown = function () {
+        this.__upPressed = true;
+    };
+
+    PlayerController.prototype.handleDownKeyDown = function () {
+        this.__downPressed = true;
+    };
+
+    PlayerController.prototype.handleLeftKeyUp = function () {
+        this.__leftPressed = false;
+    };
+
+    PlayerController.prototype.handleRightKeyUp = function () {
+        this.__rightPressed = false;
+    };
+
+    PlayerController.prototype.handleUpKeyUp = function () {
+        this.__upPressed = false;
+    };
+
+    PlayerController.prototype.handleDownKeyUp = function () {
+        this.__downPressed = false;
+    };
 
     PlayerController.prototype.pause = function () {
         this.__paused = true;
@@ -16,32 +68,35 @@ G.PlayerController = (function () {
         this.__paused = false;
     };
 
-    PlayerController.prototype.handleKeyLeft = function () {
-        // if (this.__paused)
-        //     return;
+    var FORCE_X = 0.2;
+    var FORCE_Y = 0.2;
 
-        // move left
+    PlayerController.prototype.handleLeftKey = function () {
+        if (this.__paused)
+            return;
+
+        this.player.forceX -= FORCE_X;
     };
 
-    PlayerController.prototype.handleKeyRight = function () {
-        // if (this.__paused)
-        //     return;
+    PlayerController.prototype.handleRightKey = function () {
+        if (this.__paused)
+            return;
 
-        // move right
+        this.player.forceX += FORCE_X;
     };
 
-    PlayerController.prototype.handleKeyUp = function () {
-        // if (this.__paused)
-        //     return;
+    PlayerController.prototype.handleUpKey = function () {
+        if (this.__paused)
+            return;
 
-        // move top
+        this.player.forceY -= FORCE_Y;
     };
 
-    PlayerController.prototype.handleKeyDown = function () {
-        // if (this.__paused)
-        //     return;
+    PlayerController.prototype.handleDownKey = function () {
+        if (this.__paused)
+            return;
 
-        // move down
+        this.player.forceY += FORCE_Y;
     };
 
     PlayerController.prototype.handleActionKey = function () {
@@ -51,7 +106,7 @@ G.PlayerController = (function () {
         // shoot
     };
 
-    PlayerController.prototype.handleSecondaryKey = function () {
+    PlayerController.prototype.handleAltActionKey = function () {
         // if (this.__paused)
         //     return;
 

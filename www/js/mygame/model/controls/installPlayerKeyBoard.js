@@ -6,74 +6,64 @@ G.installPlayerKeyBoard = (function (Event, Key) {
         var rightPressed = false;
         var upPressed = false;
         var downPressed = false;
-        var enterPressed = false;
-        var escapePressed = false;
-
-        function leftCallback() {
-            if (!leftPressed)
-                return;
-            playerController.handleKeyLeft(leftCallback);
-        }
-
-        function rightCallback() {
-            if (!rightPressed)
-                return;
-            playerController.handleKeyRight(rightCallback);
-        }
-
-        function upCallback() {
-            if (!upPressed)
-                return;
-            playerController.handleKeyUp(upCallback);
-        }
-
-        function downCallback() {
-            if (!downPressed)
-                return;
-            playerController.handleKeyDown(downCallback);
-        }
+        var actionPressed = false;
+        var altActionPressed = false;
+        var menuPressed = false;
 
         return events.subscribe(Event.KEY_BOARD, function (keyBoard) {
             if (keyBoard[Key.LEFT] && !leftPressed) {
                 leftPressed = true;
-                playerController.handleKeyLeft(leftCallback);
+                playerController.handleLeftKeyDown();
             } else if (!keyBoard[Key.LEFT] && leftPressed) {
                 leftPressed = false;
+                playerController.handleLeftKeyUp();
             }
 
             if (keyBoard[Key.RIGHT] && !rightPressed) {
                 rightPressed = true;
-                playerController.handleKeyRight(rightCallback);
+                playerController.handleRightKeyDown();
             } else if (!keyBoard[Key.RIGHT] && rightPressed) {
                 rightPressed = false;
+                playerController.handleRightKeyUp();
             }
 
             if (keyBoard[Key.UP] && !upPressed) {
                 upPressed = true;
-                playerController.handleKeyUp(upCallback);
+                playerController.handleUpKeyDown();
             } else if (!keyBoard[Key.UP] && upPressed) {
                 upPressed = false;
+                playerController.handleUpKeyUp();
             }
 
             if (keyBoard[Key.DOWN] && !downPressed) {
                 downPressed = true;
-                playerController.handleKeyDown(downCallback);
+                playerController.handleDownKeyDown();
             } else if (!keyBoard[Key.DOWN] && downPressed) {
                 downPressed = false;
+                playerController.handleDownKeyUp();
             }
 
-            if (keyBoard[Key.ENTER] && !enterPressed) {
-                enterPressed = true;
+            var isActionKey = keyBoard[Key.ENTER] || keyBoard[Key.CTRL];
+            if (isActionKey && !actionPressed) {
+                actionPressed = true;
                 playerController.handleActionKey();
-            } else if (!keyBoard[Key.ENTER] && enterPressed) {
-                enterPressed = false;
+            } else if (!isActionKey && actionPressed) {
+                actionPressed = false;
             }
 
-            if (keyBoard[Key.ESC] && !escapePressed) {
-                escapePressed = true;
+            var isAltActionKey = keyBoard[Key.SPACE] || keyBoard[Key.ALT];
+            if (isAltActionKey && !altActionPressed) {
+                altActionPressed = true;
+                playerController.handleAltActionKey();
+            } else if (!isAltActionKey && altActionPressed) {
+                altActionPressed = false;
+            }
+
+            if (keyBoard[Key.ESC] && !menuPressed) {
+                menuPressed = true;
                 playerController.handleMenuKey();
-            } else if (!keyBoard[Key.ESC] && escapePressed) {
-                escapePressed = false;
+            } else if (!keyBoard[Key.ESC] && menuPressed) {
+                menuPressed = false;
             }
         });
     }

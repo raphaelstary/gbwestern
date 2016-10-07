@@ -1,4 +1,4 @@
-G.World = (function () {
+G.World = (function (Math) {
     "use strict";
 
     function World(view, camera, shaker, entities) {
@@ -23,8 +23,39 @@ G.World = (function () {
         this.camera.calcScreenPosition(entity, entity.drawable);
     };
 
-    World.prototype.updatePlayer = function () {
+    var airResistance = 0.8;
 
+    World.prototype.updatePlayer = function () {
+        var player = this.player;
+
+        var forceX = 0;
+        var forceY = 0;
+
+        player.forceX *= airResistance;
+        player.forceY *= airResistance;
+
+        forceX += player.forceX;
+        forceY += player.forceY;
+
+        player.lastX = player.x;
+        player.lastY = player.y;
+
+        forceX = Math.round(forceX);
+        forceY = Math.round(forceY);
+
+        player.lastTotalForceX = forceX;
+        player.lastTotalForceY = forceY;
+
+        this.__setPlayerX(player.x + forceX);
+        this.__setPlayerY(player.y + forceY);
+    };
+
+    World.prototype.__setPlayerX = function (x) {
+        this.player.x = x;
+    };
+
+    World.prototype.__setPlayerY = function (y) {
+        this.player.y = y;
     };
 
     World.prototype.updateNPCs = function () {
@@ -47,9 +78,16 @@ G.World = (function () {
 
     };
 
-    World.prototype.preDestroy = function () {
+    function remove(entity) {
+        entity.remove();
+        entity.drawable.remove();
+    }
 
+    World.prototype.preDestroy = function () {
+        this.statics.forEach(remove);
+        this.npcs.forEach(remove);
+        remove(this.player);
     };
 
     return World;
-})();
+})(Math);

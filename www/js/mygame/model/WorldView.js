@@ -31,7 +31,10 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
     // }
 
     function createPlayer(stage, elem) {
-        return createStatic(stage, elem);
+        var player = createStatic(stage, elem);
+        player.forceX = 0;
+        player.forceY = 0;
+        return player;
     }
 
     function createStatic(stage, elem) {
