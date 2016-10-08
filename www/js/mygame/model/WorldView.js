@@ -32,6 +32,21 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
 
     function createPlayer(stage, elem) {
         var player = createStatic(stage, elem);
+
+        player.hand = stage.createImage(Image.HAND)
+            .setPosition(wrap(elem.x), wrap(elem.y))
+            .setZIndex(player.drawable.zIndex - 1);
+
+        var xRotationOffset = elem.width / 4 * 3;
+        var yOffset = 2;
+        player.hand.rotationAnchorOffsetX = -xRotationOffset;
+        player.hand.rotationAnchorOffsetY = -yOffset;
+        // player.hand.anchorOffsetX = xRotationOffset;
+        player.hand.rePosition = function () {
+            player.hand.x += xRotationOffset;
+            player.hand.y += yOffset;
+        };
+
         player.forceX = 0;
         player.forceY = 0;
         return player;
@@ -55,7 +70,7 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
             collision.select = stage.createImage(Image.SELECT_ARROW)
                 .setPosition(wrap(elem.x), wrap(elem.y - elem.height / 2 + 1))
                 .setZIndex(collision.drawable.zIndex + 1);
-            collision.select.yFn = function () {
+            collision.select.rePosition = function () {
                 collision.select.y = collision.drawable.y - elem.height / 2 - 2;
             };
 

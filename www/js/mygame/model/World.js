@@ -36,7 +36,16 @@ G.World = (function (Math, Vectors) {
         } else if (entity.isSelected === false) {
             entity.aim.show = false;
             this.camera.calcScreenPosition(entity, entity.select);
-            entity.select.yFn();
+            entity.select.rePosition();
+        }
+
+        if (entity.hand) {
+            if (this.__isAiming) {
+                this.camera.calcScreenPosition(entity, entity.hand);
+                entity.hand.rePosition();
+            } else {
+                entity.hand.show = false;
+            }
         }
     };
 
@@ -67,7 +76,15 @@ G.World = (function (Math, Vectors) {
         this.__setPlayerY(player.y + forceY);
 
         if ((forceX != 0 || forceY != 0) && !this.__isAiming)
-            this.player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
+            player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
+
+        if (this.__isAiming) {
+            var target = this.statics.concat(this.npcs).filter(isSelected)[0];
+            var aimingVector = Vectors.get(player.x, player.y, target.x, target.y);
+            var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
+            player.hand.setRotation(angle);
+            player.drawable.setRotation(angle + Vectors.toRadians(90));
+        }
     };
 
     World.prototype.__setPlayerX = function (x) {
