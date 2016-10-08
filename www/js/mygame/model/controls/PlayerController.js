@@ -107,10 +107,10 @@ G.PlayerController = (function () {
     };
 
     PlayerController.prototype.handleAltActionKey = function () {
-        // if (this.__paused)
-        //     return;
+        if (this.__paused)
+            return;
 
-        // aim / select
+        this.world.selectTarget();
     };
 
     PlayerController.prototype.handleMenuKey = function () {

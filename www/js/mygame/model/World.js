@@ -23,6 +23,21 @@ G.World = (function (Math, Vectors) {
 
     World.prototype.__updatePosition = function (entity) {
         this.camera.calcScreenPosition(entity, entity.drawable);
+
+        if (!entity.drawable.show && entity.isSelected) {
+            this.__isAiming = false;
+            entity.isSelected = false;
+        }
+
+        if (entity.isSelected) {
+            entity.select.show = false;
+            this.camera.calcScreenPosition(entity, entity.aim);
+
+        } else if (entity.isSelected === false) {
+            entity.aim.show = false;
+            this.camera.calcScreenPosition(entity, entity.select);
+            entity.select.yFn();
+        }
     };
 
     var airResistance = 0.8;
@@ -70,9 +85,63 @@ G.World = (function (Math, Vectors) {
     World.prototype.updateBullets = function () {
 
     };
+    World.prototype.__checkCollision = function (element) {
+        var player = this.player;
+
+        var widthHalf = player.getWidthHalf();
+        var heightHalf = player.getHeightHalf();
+        if (player.x + widthHalf > element.getCornerX() && player.x - widthHalf < element.getEndX() &&
+            player.y + heightHalf > element.getCornerY() && player.y - heightHalf < element.getEndY()) {
+
+            var elemHeightHalf = element.getHeightHalf();
+            var elemWidthHalf = element.getWidthHalf();
+            var b4_y = element.y + elemHeightHalf;
+            var b1_y = element.y - elemHeightHalf;
+            var b4_x = element.x - elemWidthHalf;
+            var b1_x = b4_x;
+            var b2_x = element.x + elemWidthHalf;
+            var b3_x = b2_x;
+            var b2_y = b1_y;
+            var b3_y = b4_y;
+
+            var p;
+
+            // Now compare them to know the side of collision
+            if (player.lastX + widthHalf <= element.x - elemWidthHalf &&
+                player.x + widthHalf > element.x - elemWidthHalf) {
+
+                // Collision on right side of player
+                p = Vectors.getIntersectionPoint(player.lastX + widthHalf, player.lastY, player.x + widthHalf, player.y,
+                    b1_x, b1_y, b4_x, b4_y);
+                this.__setPlayerX(p.x - widthHalf);
+
+            } else if (player.lastX - widthHalf >= element.x + elemWidthHalf &&
+                player.x - widthHalf < element.x + elemWidthHalf) {
+
+                // Collision on left side of player
+                p = Vectors.getIntersectionPoint(player.lastX - widthHalf, player.lastY, player.x - widthHalf, player.y,
+                    b2_x, b2_y, b3_x, b3_y);
+                this.__setPlayerX(p.x + widthHalf);
+
+            } else if (player.lastY + heightHalf <= element.y - elemHeightHalf &&
+                player.y + heightHalf > element.y - elemHeightHalf) {
+
+                // Collision on bottom side of player
+                p = Vectors.getIntersectionPoint(player.lastX, player.lastY + heightHalf, player.x,
+                    player.y + heightHalf, b1_x, b1_y, b2_x, b2_y);
+                this.__setPlayerY(p.y - heightHalf);
+
+            } else {
+                // Collision on top side of player
+                p = Vectors.getIntersectionPoint(player.lastX, player.lastY - heightHalf, player.x,
+                    player.y - heightHalf, b3_x, b3_y, b4_x, b4_y);
+                this.__setPlayerY(p.y + heightHalf);
+            }
+        }
+    };
 
     World.prototype.checkStaticCollisions = function () {
-
+        this.statics.forEach(this.__checkCollision, this);
     };
 
     World.prototype.checkDynamicCollisions = function () {
@@ -81,6 +150,50 @@ G.World = (function (Math, Vectors) {
 
     World.prototype.checkBulletCollisions = function () {
 
+    };
+
+    function isVisible(entity) {
+        return entity.drawable.show;
+    }
+
+    function isSelectable(entity) {
+        return entity.aim;
+    }
+
+    function isSelected(entity) {
+        return entity.isSelected;
+    }
+
+    function isNotSelected(entity) {
+        return !entity.isSelected;
+    }
+
+    function deselect(entity) {
+        entity.isSelected = false;
+    }
+
+    function select(entity) {
+        entity.lastSelected = Date.now();
+        return entity.isSelected = true;
+    }
+
+    function byMs(a, b) {
+        return a.lastSelected - b.lastSelected;
+    }
+
+    World.prototype.selectTarget = function () {
+        var targets = this.statics.concat(this.npcs).filter(isVisible).filter(isSelectable);
+
+        if (this.__isAiming) {
+            var selectedTargets = targets.filter(isSelected);
+            var notSelectedTargets = targets.filter(isNotSelected).sort(byMs);
+
+            selectedTargets.forEach(deselect);
+            this.__isAiming = notSelectedTargets.some(select);
+
+        } else {
+            this.__isAiming = targets.sort(byMs).some(select);
+        }
     };
 
     function remove(entity) {

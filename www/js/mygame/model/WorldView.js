@@ -1,4 +1,4 @@
-G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract) {
+G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image) {
     "use strict";
 
     function WorldView(services) {
@@ -50,6 +50,22 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         collision.drawable = stage.createImage(imgName)
             .setPosition(wrap(elem.x), wrap(elem.y))
             .setZIndex(elem.zIndex);
+
+        if (elem.tags && hasTag('aim')(elem.tags)) {
+            collision.select = stage.createImage(Image.SELECT_ARROW)
+                .setPosition(wrap(elem.x), wrap(elem.y - elem.height / 2 + 1))
+                .setZIndex(collision.drawable.zIndex + 1);
+            collision.select.yFn = function () {
+                collision.select.y = collision.drawable.y - elem.height / 2 - 2;
+            };
+
+            collision.aim = stage.createImage(elem.width <= UI.TILE_LENGTH ? Image.AIM_SMALL : Image.AIM)
+                .setPosition(wrap(elem.x), wrap(elem.y))
+                .setZIndex(collision.drawable.zIndex + 1);
+
+            collision.isSelected = false;
+            collision.lastSelected = 0;
+        }
 
         return collision;
     }
@@ -115,4 +131,4 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
     };
 
     return WorldView;
-})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract);
+})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract, G.Image);
