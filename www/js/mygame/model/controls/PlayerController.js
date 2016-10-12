@@ -100,10 +100,10 @@ G.PlayerController = (function () {
     };
 
     PlayerController.prototype.handleActionKey = function () {
-        // if (this.__paused)
-        //     return;
+        if (this.__paused)
+            return;
 
-        // shoot
+        this.world.shoot();
     };
 
     PlayerController.prototype.handleAltActionKey = function () {

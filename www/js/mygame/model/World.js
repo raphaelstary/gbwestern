@@ -10,7 +10,10 @@ G.World = (function (Math, Vectors) {
         this.statics = entities.statics;
         this.npcs = entities.npcs;
 
+        this.bullets = [];
+
         this.__isAiming = false;
+        this.__lockHand = 0;
     }
 
     World.prototype.updateCamera = function () {
@@ -19,6 +22,12 @@ G.World = (function (Math, Vectors) {
         this.__updatePosition(this.player);
         this.statics.forEach(this.__updatePosition, this);
         this.npcs.forEach(this.__updatePosition, this);
+
+        this.bullets.forEach(this.__updateBulletPosition, this);
+    };
+
+    World.prototype.__updateBulletPosition = function (bullet) {
+        this.camera.calcBulletsScreenPosition(bullet, bullet.drawable);
     };
 
     World.prototype.__updatePosition = function (entity) {
@@ -43,6 +52,8 @@ G.World = (function (Math, Vectors) {
             if (this.__isAiming) {
                 this.camera.calcScreenPosition(entity, entity.hand);
                 entity.hand.rePosition();
+            } else if (this.__lockHand > 0) {
+                this.__lockHand--;
             } else {
                 entity.hand.show = false;
             }
@@ -100,8 +111,32 @@ G.World = (function (Math, Vectors) {
     };
 
     World.prototype.updateBullets = function () {
-
+        this.bullets.forEach(this.__updateBullet, this);
     };
+
+    World.prototype.__updateBullet = function (bullet, id, array) {
+        if (bullet.dead) {
+            bullet.lastAX = bullet.data.ax;
+            bullet.lastAY = bullet.data.ay;
+            bullet.data.ax += bullet.forceX;
+            bullet.data.ay += bullet.forceY;
+
+            var vector = Vectors.get(bullet.data.ax, bullet.data.ay, bullet.data.bx, bullet.data.by);
+            var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
+            if (magnitude < 10) {
+                array.splice(id, 1);
+                remove(bullet);
+            }
+
+            return;
+        }
+
+        bullet.lastBX = bullet.data.bx;
+        bullet.lastBY = bullet.data.by;
+        bullet.data.bx += bullet.forceX;
+        bullet.data.by += bullet.forceY;
+    };
+
     World.prototype.__checkCollision = function (element) {
         var player = this.player;
 
@@ -166,8 +201,27 @@ G.World = (function (Math, Vectors) {
     };
 
     World.prototype.checkBulletCollisions = function () {
-
+        this.bullets.forEach(this.__checkBulletCollision, this);
     };
+
+    World.prototype.__checkBulletCollision = function (bullet) {
+        this.statics.forEach(function (staticElement, sId, statics) {
+            if (isSelectable(staticElement) && isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
+                bullet.dead = true;
+                this.view.destroyEntity(staticElement).then(function () {
+                    statics.splice(sId, 1);
+                    remove(staticElement);
+                });
+                this.view.removeBullet(bullet);
+                this.__lockHand = 15;
+                this.__isAiming = false;
+            }
+        }, this);
+    };
+
+    function isCollision(x, y, entity) {
+        return !(x > entity.getEndX() || x < entity.getCornerX() || y < entity.getCornerY() || y > entity.getEndY());
+    }
 
     function isVisible(entity) {
         return entity.drawable.show;
@@ -213,7 +267,21 @@ G.World = (function (Math, Vectors) {
         }
     };
 
+    World.prototype.shoot = function () {
+        if (this.__isAiming) {
+            var player = this.player;
+            var target = this.statics.concat(this.npcs).filter(isSelected)[0];
+            this.bullets.push(this.view.spawnBullet(player, target));
+        }
+    };
+
     function remove(entity) {
+        if (entity.aim)
+            entity.aim.remove();
+        if (entity.select)
+            entity.select.remove();
+        if (entity.hand)
+            entity.hand.remove();
         entity.remove();
         entity.drawable.remove();
     }

@@ -1,4 +1,4 @@
-G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image) {
+G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image, Vectors, Math) {
     "use strict";
 
     function WorldView(services) {
@@ -145,5 +145,43 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         return promise;
     };
 
+    WorldView.prototype.spawnBullet = function (shooter, target) {
+        var aimingVector = Vectors.get(shooter.x, shooter.y, target.x, target.y);
+        var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
+
+        var playerWidth = shooter.getWidth();
+        var startX = Math.floor(Vectors.getX(shooter.x, playerWidth, angle));
+        var startY = Math.floor(Vectors.getY(shooter.y, playerWidth, angle));
+
+        var bullet = this.stage.createABLine()
+            .setA(wrap(startX), wrap(startY))
+            .setB(wrap(startX), wrap(startY));
+        bullet.show = false;
+
+        bullet.drawable = this.stage.createABLine()
+            .setA(wrap(startX), wrap(startY))
+            .setB(wrap(startX), wrap(startY))
+            .setColor(UI.GREEN_MIDDLE);
+
+        bullet.forceX = Vectors.getX(0, 4, angle);
+        bullet.forceY = Vectors.getY(0, 4, angle);
+
+        return bullet;
+    };
+
+    WorldView.prototype.destroyEntity = function (entity) {
+        var promise = new Promise();
+        promise.resolve(entity);
+        return promise;
+    };
+
+    WorldView.prototype.removeBullet = function (bullet) {
+        var vector = Vectors.get(bullet.data.ax, bullet.data.ay, bullet.data.bx, bullet.data.by);
+        var angle = Vectors.getAngle(vector.x, vector.y);
+
+        bullet.forceX = Vectors.getX(0, 6, angle);
+        bullet.forceY = Vectors.getY(0, 6, angle);
+    };
+
     return WorldView;
-})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract, G.Image);
+})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract, G.Image, H5.Vectors, Math);

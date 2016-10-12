@@ -35,6 +35,29 @@ G.Camera = (function () {
         drawable.y = entity.y - cornerY * this.viewPort.scale;
     };
 
+    Camera.prototype.calcBulletsScreenPosition = function (entity, drawable) {
+        var cornerX = this.viewPort.getCornerX();
+        var cornerY = this.viewPort.getCornerY();
+
+        var right = entity.data.ax > entity.data.bx ? entity.data.ax : entity.data.bx;
+        var left = entity.data.ax < entity.data.bx ? entity.data.ax : entity.data.bx;
+        var bottom = entity.data.ay > entity.data.by ? entity.data.ay : entity.data.by;
+        var top = entity.data.ay < entity.data.by ? entity.data.ay : entity.data.by;
+
+        if (right < cornerX || left > this.viewPort.getEndX() || bottom < cornerY || top > this.viewPort.getEndY()) {
+
+            drawable.show = false;
+            return;
+        }
+
+        drawable.show = this.isShow;
+
+        drawable.data.ax = entity.data.ax - cornerX * this.viewPort.scale;
+        drawable.data.ay = entity.data.ay - cornerY * this.viewPort.scale;
+        drawable.data.bx = entity.data.bx - cornerX * this.viewPort.scale;
+        drawable.data.by = entity.data.by - cornerY * this.viewPort.scale;
+    };
+
     Camera.prototype.move = function (anchor) {
         if (this.isPositionLocked)
             return;
