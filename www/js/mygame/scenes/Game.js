@@ -20,7 +20,12 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
             self.timer.doLater(self.nextScene.bind(self), 5);
         }
 
-        var wrapper = createWorld(this.services, gameOver);
+        var wrapper = createWorld(this.services, this.barrel, {
+            heart: this.cardHeart,
+            diamond: this.cardDiamond,
+            spade: this.cardSpade,
+            club: this.cardSpade
+        }, gameOver);
 
         this.world = wrapper.world;
         this.view = wrapper.view;

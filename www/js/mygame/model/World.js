@@ -1,4 +1,4 @@
-G.World = (function (Math, Vectors) {
+G.World = (function (Math, Vectors, Promise) {
     "use strict";
 
     function World(view, camera, shaker, entities) {
@@ -14,6 +14,8 @@ G.World = (function (Math, Vectors) {
 
         this.__isAiming = false;
         this.__lockHand = 0;
+
+        this.__bulletsLoadedCount = 6;
     }
 
     World.prototype.updateCamera = function () {
@@ -215,6 +217,10 @@ G.World = (function (Math, Vectors) {
                 this.view.removeBullet(bullet);
                 this.__lockHand = 15;
                 this.__isAiming = false;
+
+            } else if (isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
+                bullet.dead = true;
+                this.view.removeBullet(bullet);
             }
         }, this);
     };
@@ -268,11 +274,30 @@ G.World = (function (Math, Vectors) {
     };
 
     World.prototype.shoot = function () {
+        var promise = new Promise();
         if (this.__isAiming) {
             var player = this.player;
             var target = this.statics.concat(this.npcs).filter(isSelected)[0];
             this.bullets.push(this.view.spawnBullet(player, target));
+
+            this.view.spinRevolver(this.__bulletsLoadedCount--)
+                .then(this.__reload.bind(this))
+                .then(promise.resolve.bind(promise));
+        } else {
+            promise.resolve();
         }
+        return promise;
+    };
+
+    World.prototype.__reload = function () {
+        var promise = new Promise();
+        if (this.__bulletsLoadedCount == 0) {
+            this.__bulletsLoadedCount = 6;
+            this.view.reloadRevolver().then(promise.resolve.bind(promise));
+        } else {
+            promise.resolve();
+        }
+        return promise;
     };
 
     function remove(entity) {
@@ -293,4 +318,4 @@ G.World = (function (Math, Vectors) {
     };
 
     return World;
-})(Math, H5.Vectors);
+})(Math, H5.Vectors, H5.Promise);

@@ -1,7 +1,7 @@
 G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, Camera, PlayerController, Scene) {
     "use strict";
 
-    function createWorld(services, gameOver) {
+    function createWorld(services, barrel, cards, gameOver) {
 
         var shaker = new ScreenShaker(services.device);
         var viewPort = createViewPort(services.stage);
@@ -15,7 +15,7 @@ G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, C
 
         shaker.add(viewPort);
 
-        var view = new WorldView(services);
+        var view = new WorldView(services, barrel, cards);
         var entities = view.init(worldData);
         var world = new World(view, camera, shaker, entities, gameOver);
 

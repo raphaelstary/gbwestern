@@ -11,6 +11,8 @@ G.PlayerController = (function () {
         this.__rightPressed = false;
         this.__downPressed = false;
         this.__upPressed = false;
+
+        this.__shooting = false;
     }
 
     PlayerController.prototype.update = function () {
@@ -102,8 +104,13 @@ G.PlayerController = (function () {
     PlayerController.prototype.handleActionKey = function () {
         if (this.__paused)
             return;
+        if (this.__shooting)
+            return;
 
-        this.world.shoot();
+        this.__shooting = true;
+        this.world.shoot().then(function () {
+            this.__shooting = false;
+        }, this);
     };
 
     PlayerController.prototype.handleAltActionKey = function () {

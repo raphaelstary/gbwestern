@@ -1,9 +1,13 @@
 G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image, Vectors, Math) {
     "use strict";
 
-    function WorldView(services) {
+    function WorldView(services, barrel, cards) {
         this.stage = services.stage;
         this.timer = services.timer;
+
+        this.barrel = barrel;
+        barrel.data = this.stage.getGraphic(Image.BULLET + 6);
+        this.cards = cards;
     }
 
     function hasTag(name) {
@@ -181,6 +185,28 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
 
         bullet.forceX = Vectors.getX(0, 6, angle);
         bullet.forceY = Vectors.getY(0, 6, angle);
+    };
+
+    WorldView.prototype.spinRevolver = function (bulletsLoaded) {
+        var promise = new Promise();
+        var self = this;
+        this.barrel.animate(Image[Image.BARREL_SHOT + bulletsLoaded], Image.BARREL_SHOT_FRAMES, false)
+            .setCallback(function () {
+                self.barrel.data = self.stage.getGraphic(Image.BULLET + --bulletsLoaded);
+                promise.resolve();
+            });
+        return promise;
+    };
+
+    WorldView.prototype.reloadRevolver = function () {
+        var promise = new Promise();
+        var self = this;
+        this.barrel.animate(Image.BARREL_RELOAD, Image.BARREL_RELOAD_FRAMES, false)
+            .setCallback(function () {
+                self.barrel.data = self.stage.getGraphic(Image.BULLET + 6);
+                promise.resolve();
+            });
+        return promise;
     };
 
     return WorldView;
