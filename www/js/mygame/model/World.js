@@ -151,20 +151,27 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
     };
 
     World.prototype.__updateBullet = function (bullet, id, array) {
+        var vector = Vectors.get(bullet.data.ax, bullet.data.ay, bullet.data.bx, bullet.data.by);
+        var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
+
         if (bullet.dead) {
             bullet.lastAX = bullet.data.ax;
             bullet.lastAY = bullet.data.ay;
+
             bullet.data.ax += bullet.forceX;
             bullet.data.ay += bullet.forceY;
 
-            var vector = Vectors.get(bullet.data.ax, bullet.data.ay, bullet.data.bx, bullet.data.by);
-            var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
             if (magnitude < 10) {
                 array.splice(id, 1);
                 remove(bullet);
             }
 
             return;
+        }
+
+        if (magnitude > UI.HEIGHT * UI.HEIGHT) {
+            bullet.dead = true;
+            this.view.removeBullet(bullet);
         }
 
         bullet.lastBX = bullet.data.bx;
