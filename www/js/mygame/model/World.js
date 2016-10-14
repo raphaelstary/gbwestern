@@ -1,4 +1,4 @@
-G.World = (function (Math, Vectors, Promise) {
+G.World = (function (Math, Vectors, Promise, NPCState, UI) {
     "use strict";
 
     function World(view, camera, shaker, entities) {
@@ -108,8 +108,42 @@ G.World = (function (Math, Vectors, Promise) {
         this.player.y = y;
     };
 
-    World.prototype.updateNPCs = function () {
+    function isIdle(entity) {
+        return entity.state == NPCState.IDLE;
+    }
 
+    function isShooting(entity) {
+        return entity.state == NPCState.SHOOTING;
+    }
+
+    World.prototype.__shoot = function (entity) {
+        this.bullets.push(this.view.spawnBullet(entity, this.player));
+        entity.shotsFired++;
+        entity.coolDown = entity.shotsFired % 6 != 0 ? 60 : 60 * 3;
+    };
+
+    World.prototype.__checkSight = function (entity) {
+        var vector = Vectors.get(entity.x, entity.y, this.player.x, this.player.y);
+        var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
+        if (magnitude < UI.HEIGHT * UI.HEIGHT) {
+            entity.state = NPCState.SHOOTING;
+            this.__shoot(entity);
+        }
+    };
+
+    function coolDown(entity) {
+        if (entity.coolDown > 0)
+            entity.coolDown--;
+    }
+
+    function isCooledDown(entity) {
+        return entity.coolDown == 0;
+    }
+
+    World.prototype.updateNPCs = function () {
+        this.npcs.forEach(coolDown);
+        this.npcs.filter(isShooting).filter(isCooledDown).forEach(this.__shoot, this);
+        this.npcs.filter(isIdle).forEach(this.__checkSight, this);
     };
 
     World.prototype.updateBullets = function () {
@@ -207,6 +241,27 @@ G.World = (function (Math, Vectors, Promise) {
     };
 
     World.prototype.__checkBulletCollision = function (bullet) {
+        if (bullet.dead)
+            return;
+
+        this.npcs.forEach(function (npc, npcId, npcs) {
+            if (isCollision(bullet.data.bx, bullet.data.by, npc)) {
+                bullet.dead = true;
+
+                if (--npc.lives < 1) {
+                    this.view.destroyEntity(npc).then(function () {
+                        npcs.splice(npcId, 1);
+                        remove(npc);
+                    }, this);
+
+                    this.__lockHand = 15;
+                    this.__isAiming = false;
+                }
+
+                this.view.removeBullet(bullet);
+            }
+        }, this);
+
         this.statics.forEach(function (staticElement, sId, statics) {
             if (isSelectable(staticElement) && isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
                 bullet.dead = true;
@@ -318,4 +373,4 @@ G.World = (function (Math, Vectors, Promise) {
     };
 
     return World;
-})(Math, H5.Vectors, H5.Promise);
+})(Math, H5.Vectors, H5.Promise, G.NPCState, G.UI);

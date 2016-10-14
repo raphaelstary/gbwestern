@@ -1,4 +1,5 @@
-G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image, Vectors, Math) {
+G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtract, Image, Vectors, Math, Object,
+    NPCState) {
     "use strict";
 
     function WorldView(services, barrel, cards) {
@@ -10,29 +11,24 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         this.cards = cards;
     }
 
-    function hasTag(name) {
-        function eqName(tag) {
-            return tag == name || tag instanceof Object && Object.keys(tag).some(eqName);
-        }
+    function eqName(tag) {
+        return tag == this.name || tag instanceof Object && Object.keys(tag).some(eqName.bind(this));
+    }
 
+    function hasTag(name) {
         return function (tags) {
-            return tags.some(eqName);
+            return tags.some(eqName.bind({name: name}));
         };
     }
 
-    // function getTagValue(name) {
-    //     return function (tags) {
-    //         var returnValue = false;
-    //         tags.some(function (tag) {
-    //             if (tag[name] != undefined) {
-    //                 returnValue = tag[name];
-    //                 return true;
-    //             }
-    //             return false;
-    //         });
-    //         return returnValue;
-    //     };
-    // }
+    function getTagValue(name) {
+        return function (tags) {
+            var filtered = tags.filter(eqName.bind({name: name}));
+            if (filtered.length == 0)
+                return false;
+            return filtered[0][name];
+        }
+    }
 
     function createPlayer(stage, elem) {
         var player = createStatic(stage, elem);
@@ -53,6 +49,9 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
 
         player.forceX = 0;
         player.forceY = 0;
+
+        player.lives = 3;
+
         return player;
     }
 
@@ -89,8 +88,13 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         return collision;
     }
 
-    function createNPC(stage, elem) {
-        return createStatic(stage, elem);
+    function createEnemy(stage, elem) {
+        var enemy = createStatic(stage, elem);
+        enemy.lives = 2;
+        enemy.state = NPCState.IDLE;
+        enemy.shotsFired = 0;
+
+        return enemy;
     }
 
     WorldView.prototype.init = function (worldData) {
@@ -102,8 +106,8 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
             if (drawableData.tags && hasTag('player')(drawableData.tags)) {
                 player = createPlayer(this.stage, drawableData);
 
-            } else if (drawableData.tags && hasTag('npc')(drawableData.tags)) {
-                npcs.push(createNPC(this.stage, drawableData));
+            } else if (drawableData.tags && getTagValue('entity')(drawableData.tags) == 'enemy') {
+                npcs.push(createEnemy(this.stage, drawableData));
 
             } else {
                 statics.push(createStatic(this.stage, drawableData))
@@ -210,4 +214,5 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
     };
 
     return WorldView;
-})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract, G.Image, H5.Vectors, Math);
+})(H5.Promise, H5.Transition, H5.CallbackCounter, H5.wrap, G.UI, H5.subtract, G.Image, H5.Vectors, Math, Object,
+    G.NPCState);
