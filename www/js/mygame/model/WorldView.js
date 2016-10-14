@@ -30,22 +30,31 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         }
     }
 
-    function createPlayer(stage, elem) {
-        var player = createStatic(stage, elem);
-
-        player.hand = stage.createImage(Image.HAND)
+    function createDrawHand(stage, elem, zIndex) {
+        var hand = stage.createImage(Image.HAND)
             .setPosition(wrap(elem.x), wrap(elem.y))
-            .setZIndex(player.drawable.zIndex - 1);
+            .setZIndex(zIndex);
 
         var xRotationOffset = elem.width / 4 * 3;
         var yOffset = 2;
-        player.hand.rotationAnchorOffsetX = -xRotationOffset;
-        player.hand.rotationAnchorOffsetY = -yOffset;
-        // player.hand.anchorOffsetX = xRotationOffset;
-        player.hand.rePosition = function () {
-            player.hand.x += xRotationOffset;
-            player.hand.y += yOffset;
+        hand.rotationAnchorOffsetX = -xRotationOffset;
+        hand.rotationAnchorOffsetY = -yOffset;
+        // hand.anchorOffsetX = xRotationOffset;
+        hand.rePosition = function () {
+            hand.x += xRotationOffset;
+            hand.y += yOffset;
         };
+
+        hand.isAiming = false;
+        hand.lock = 0;
+
+        return hand;
+    }
+
+    function createPlayer(stage, elem) {
+        var player = createStatic(stage, elem);
+
+        player.hand = createDrawHand(stage, elem, player.drawable.zIndex - 1);
 
         player.forceX = 0;
         player.forceY = 0;
@@ -93,6 +102,7 @@ G.WorldView = (function (Promise, Transition, CallbackCounter, wrap, UI, subtrac
         enemy.lives = 2;
         enemy.state = NPCState.IDLE;
         enemy.shotsFired = 0;
+        enemy.hand = createDrawHand(stage, elem, enemy.drawable.zIndex - 1);
 
         return enemy;
     }

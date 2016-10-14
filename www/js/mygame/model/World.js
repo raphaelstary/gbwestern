@@ -12,9 +12,6 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
 
         this.bullets = [];
 
-        this.__isAiming = false;
-        this.__lockHand = 0;
-
         this.__bulletsLoadedCount = 6;
     }
 
@@ -36,7 +33,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         this.camera.calcScreenPosition(entity, entity.drawable);
 
         if (!entity.drawable.show && entity.isSelected) {
-            this.__isAiming = false;
+            this.player.hand.isAiming = false;
             entity.isSelected = false;
         }
 
@@ -51,11 +48,11 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         }
 
         if (entity.hand) {
-            if (this.__isAiming) {
+            if (entity.hand.isAiming) {
                 this.camera.calcScreenPosition(entity, entity.hand);
                 entity.hand.rePosition();
-            } else if (this.__lockHand > 0) {
-                this.__lockHand--;
+            } else if (entity.hand.lock > 0) {
+                entity.hand.lock--;
             } else {
                 entity.hand.show = false;
             }
@@ -63,6 +60,13 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
     };
 
     var airResistance = 0.8;
+
+    function rePositionHand(shooter, target) {
+        var aimingVector = Vectors.get(shooter.x, shooter.y, target.x, target.y);
+        var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
+        shooter.hand.setRotation(angle);
+        shooter.drawable.setRotation(angle + Vectors.toRadians(90));
+    }
 
     World.prototype.updatePlayer = function () {
         var player = this.player;
@@ -85,27 +89,16 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         player.lastTotalForceX = forceX;
         player.lastTotalForceY = forceY;
 
-        this.__setPlayerX(player.x + forceX);
-        this.__setPlayerY(player.y + forceY);
+        player.x += forceX;
+        player.y += forceY;
 
-        if ((forceX != 0 || forceY != 0) && !this.__isAiming)
+        if ((forceX != 0 || forceY != 0) && !player.hand.isAiming)
             player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
 
-        if (this.__isAiming) {
+        if (player.hand.isAiming) {
             var target = this.statics.concat(this.npcs).filter(isSelected)[0];
-            var aimingVector = Vectors.get(player.x, player.y, target.x, target.y);
-            var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
-            player.hand.setRotation(angle);
-            player.drawable.setRotation(angle + Vectors.toRadians(90));
+            rePositionHand(player, target);
         }
-    };
-
-    World.prototype.__setPlayerX = function (x) {
-        this.player.x = x;
-    };
-
-    World.prototype.__setPlayerY = function (y) {
-        this.player.y = y;
     };
 
     function isIdle(entity) {
@@ -128,6 +121,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         if (magnitude < UI.HEIGHT * UI.HEIGHT) {
             entity.state = NPCState.SHOOTING;
             this.__shoot(entity);
+            entity.hand.isAiming = true;
         }
     };
 
@@ -140,9 +134,15 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         return entity.coolDown == 0;
     }
 
+    World.prototype.__rePositionHand = function (entity) {
+        rePositionHand(entity, this.player);
+    };
+
     World.prototype.updateNPCs = function () {
         this.npcs.forEach(coolDown);
-        this.npcs.filter(isShooting).filter(isCooledDown).forEach(this.__shoot, this);
+        var shooters = this.npcs.filter(isShooting);
+        shooters.forEach(this.__rePositionHand, this);
+        shooters.filter(isCooledDown).forEach(this.__shoot, this);
         this.npcs.filter(isIdle).forEach(this.__checkSight, this);
     };
 
@@ -208,7 +208,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
                 // Collision on right side of player
                 p = Vectors.getIntersectionPoint(player.lastX + widthHalf, player.lastY, player.x + widthHalf, player.y,
                     b1_x, b1_y, b4_x, b4_y);
-                this.__setPlayerX(p.x - widthHalf);
+                player.x = p.x - widthHalf;
 
             } else if (player.lastX - widthHalf >= element.x + elemWidthHalf &&
                 player.x - widthHalf < element.x + elemWidthHalf) {
@@ -216,7 +216,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
                 // Collision on left side of player
                 p = Vectors.getIntersectionPoint(player.lastX - widthHalf, player.lastY, player.x - widthHalf, player.y,
                     b2_x, b2_y, b3_x, b3_y);
-                this.__setPlayerX(p.x + widthHalf);
+                player.x = p.x + widthHalf;
 
             } else if (player.lastY + heightHalf <= element.y - elemHeightHalf &&
                 player.y + heightHalf > element.y - elemHeightHalf) {
@@ -224,13 +224,13 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
                 // Collision on bottom side of player
                 p = Vectors.getIntersectionPoint(player.lastX, player.lastY + heightHalf, player.x,
                     player.y + heightHalf, b1_x, b1_y, b2_x, b2_y);
-                this.__setPlayerY(p.y - heightHalf);
+                player.y = p.y - heightHalf;
 
             } else {
                 // Collision on top side of player
                 p = Vectors.getIntersectionPoint(player.lastX, player.lastY - heightHalf, player.x,
                     player.y - heightHalf, b3_x, b3_y, b4_x, b4_y);
-                this.__setPlayerY(p.y + heightHalf);
+                player.y = p.y + heightHalf;
             }
         }
     };
@@ -261,8 +261,8 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
                         remove(npc);
                     }, this);
 
-                    this.__lockHand = 15;
-                    this.__isAiming = false;
+                    this.player.hand.lock = 15;
+                    this.player.hand.isAiming = false;
                 }
 
                 this.view.removeBullet(bullet);
@@ -277,8 +277,8 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
                     remove(staticElement);
                 });
                 this.view.removeBullet(bullet);
-                this.__lockHand = 15;
-                this.__isAiming = false;
+                this.player.hand.lock = 15;
+                this.player.hand.isAiming = false;
 
             } else if (isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
                 bullet.dead = true;
@@ -323,21 +323,21 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
     World.prototype.selectTarget = function () {
         var targets = this.statics.concat(this.npcs).filter(isVisible).filter(isSelectable);
 
-        if (this.__isAiming) {
+        if (this.player.hand.isAiming) {
             var selectedTargets = targets.filter(isSelected);
             var notSelectedTargets = targets.filter(isNotSelected).sort(byMs);
 
             selectedTargets.forEach(deselect);
-            this.__isAiming = notSelectedTargets.some(select);
+            this.player.hand.isAiming = notSelectedTargets.some(select);
 
         } else {
-            this.__isAiming = targets.sort(byMs).some(select);
+            this.player.hand.isAiming = targets.sort(byMs).some(select);
         }
     };
 
     World.prototype.shoot = function () {
         var promise = new Promise();
-        if (this.__isAiming) {
+        if (this.player.hand.isAiming) {
             var player = this.player;
             var target = this.statics.concat(this.npcs).filter(isSelected)[0];
             this.bullets.push(this.view.spawnBullet(player, target));
