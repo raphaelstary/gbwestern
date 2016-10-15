@@ -1,4 +1,4 @@
-G.World = (function (Math, Vectors, Promise, NPCState, UI) {
+G.World = (function (Math, Vectors, Promise, NPCState, UI, Entities) {
     "use strict";
 
     function World(view, camera, shaker, entities) {
@@ -61,13 +61,6 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
 
     var airResistance = 0.8;
 
-    function rePositionHand(shooter, target) {
-        var aimingVector = Vectors.get(shooter.x, shooter.y, target.x, target.y);
-        var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
-        shooter.hand.setRotation(angle);
-        shooter.drawable.setRotation(angle + Vectors.toRadians(90));
-    }
-
     World.prototype.updatePlayer = function () {
         var player = this.player;
 
@@ -96,54 +89,41 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
             player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
 
         if (player.hand.isAiming) {
-            var target = this.statics.concat(this.npcs).filter(isSelected)[0];
-            rePositionHand(player, target);
+            var target = this.statics.concat(this.npcs).filter(Entities.isSelected)[0];
+            Entities.rePositionHand(player, target);
         }
     };
 
-    function isIdle(entity) {
-        return entity.state == NPCState.IDLE;
-    }
+    World.prototype.__shoot = function (npc) {
+        npc.shotsFired++;
+        npc.coolDown = npc.shotsFired % 6 != 0 ? 60 : 60 * 3;
 
-    function isShooting(entity) {
-        return entity.state == NPCState.SHOOTING;
-    }
-
-    World.prototype.__shoot = function (entity) {
-        this.bullets.push(this.view.spawnBullet(entity, this.player));
-        entity.shotsFired++;
-        entity.coolDown = entity.shotsFired % 6 != 0 ? 60 : 60 * 3;
+        this.bullets.push(this.view.spawnBullet(npc, npc.target));
     };
 
     World.prototype.__checkSight = function (entity) {
         var vector = Vectors.get(entity.x, entity.y, this.player.x, this.player.y);
         var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
+
         if (magnitude < UI.HEIGHT * UI.HEIGHT) {
             entity.state = NPCState.SHOOTING;
-            this.__shoot(entity);
             entity.hand.isAiming = true;
+            entity.target = this.player;
+
+            this.__shoot(entity);
         }
     };
 
-    function coolDown(entity) {
-        if (entity.coolDown > 0)
-            entity.coolDown--;
-    }
-
-    function isCooledDown(entity) {
-        return entity.coolDown == 0;
-    }
-
-    World.prototype.__rePositionHand = function (entity) {
-        rePositionHand(entity, this.player);
+    World.prototype.__rePositionHand = function (npc) {
+        Entities.rePositionHand(npc, npc.target);
     };
 
     World.prototype.updateNPCs = function () {
-        this.npcs.forEach(coolDown);
-        var shooters = this.npcs.filter(isShooting);
+        this.npcs.forEach(Entities.coolDown);
+        var shooters = this.npcs.filter(Entities.isShooting);
         shooters.forEach(this.__rePositionHand, this);
-        shooters.filter(isCooledDown).forEach(this.__shoot, this);
-        this.npcs.filter(isIdle).forEach(this.__checkSight, this);
+        shooters.filter(Entities.isCooledDown).forEach(this.__shoot, this);
+        this.npcs.filter(Entities.isIdle).forEach(this.__checkSight, this);
     };
 
     World.prototype.updateBullets = function () {
@@ -163,9 +143,8 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
 
             if (magnitude < 10) {
                 array.splice(id, 1);
-                remove(bullet);
+                Entities.remove(bullet);
             }
-
             return;
         }
 
@@ -252,13 +231,13 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
             return;
 
         this.npcs.forEach(function (npc, npcId, npcs) {
-            if (isCollision(bullet.data.bx, bullet.data.by, npc)) {
+            if (Entities.isCollision(bullet.data.bx, bullet.data.by, npc)) {
                 bullet.dead = true;
 
                 if (--npc.lives < 1) {
                     this.view.destroyEntity(npc).then(function () {
                         npcs.splice(npcId, 1);
-                        remove(npc);
+                        Entities.remove(npc);
                     }, this);
 
                     this.player.hand.lock = 15;
@@ -270,68 +249,37 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         }, this);
 
         this.statics.forEach(function (staticElement, sId, statics) {
-            if (isSelectable(staticElement) && isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
+            if (Entities.isSelectable(staticElement) &&
+                Entities.isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
+
                 bullet.dead = true;
                 this.view.destroyEntity(staticElement).then(function () {
                     statics.splice(sId, 1);
-                    remove(staticElement);
+                    Entities.remove(staticElement);
                 });
                 this.view.removeBullet(bullet);
                 this.player.hand.lock = 15;
                 this.player.hand.isAiming = false;
 
-            } else if (isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
+            } else if (Entities.isCollision(bullet.data.bx, bullet.data.by, staticElement)) {
                 bullet.dead = true;
                 this.view.removeBullet(bullet);
             }
         }, this);
     };
 
-    function isCollision(x, y, entity) {
-        return !(x > entity.getEndX() || x < entity.getCornerX() || y < entity.getCornerY() || y > entity.getEndY());
-    }
-
-    function isVisible(entity) {
-        return entity.drawable.show;
-    }
-
-    function isSelectable(entity) {
-        return entity.aim;
-    }
-
-    function isSelected(entity) {
-        return entity.isSelected;
-    }
-
-    function isNotSelected(entity) {
-        return !entity.isSelected;
-    }
-
-    function deselect(entity) {
-        entity.isSelected = false;
-    }
-
-    function select(entity) {
-        entity.lastSelected = Date.now();
-        return entity.isSelected = true;
-    }
-
-    function byMs(a, b) {
-        return a.lastSelected - b.lastSelected;
-    }
-
     World.prototype.selectTarget = function () {
-        var targets = this.statics.concat(this.npcs).filter(isVisible).filter(isSelectable);
+        var targets = this.statics.concat(this.npcs).filter(Entities.isVisible).filter(Entities.isSelectable);
 
         if (this.player.hand.isAiming) {
-            var selectedTargets = targets.filter(isSelected);
-            var notSelectedTargets = targets.filter(isNotSelected).sort(byMs);
+            var selectedTargets = targets.filter(Entities.isSelected);
+            var notSelectedTargets = targets.filter(Entities.isNotSelected).sort(Entities.byMs);
 
-            selectedTargets.forEach(deselect);
-            this.player.hand.isAiming = notSelectedTargets.some(select);
+            selectedTargets.forEach(Entities.deselect);
+            this.player.hand.isAiming = notSelectedTargets.some(Entities.select);
 
         } else {
-            this.player.hand.isAiming = targets.sort(byMs).some(select);
+            this.player.hand.isAiming = targets.sort(Entities.byMs).some(Entities.select);
         }
     };
 
@@ -339,7 +287,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         var promise = new Promise();
         if (this.player.hand.isAiming) {
             var player = this.player;
-            var target = this.statics.concat(this.npcs).filter(isSelected)[0];
+            var target = this.statics.concat(this.npcs).filter(Entities.isSelected)[0];
             this.bullets.push(this.view.spawnBullet(player, target));
 
             this.view.spinRevolver(this.__bulletsLoadedCount--)
@@ -362,22 +310,11 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI) {
         return promise;
     };
 
-    function remove(entity) {
-        if (entity.aim)
-            entity.aim.remove();
-        if (entity.select)
-            entity.select.remove();
-        if (entity.hand)
-            entity.hand.remove();
-        entity.remove();
-        entity.drawable.remove();
-    }
-
     World.prototype.preDestroy = function () {
-        this.statics.forEach(remove);
-        this.npcs.forEach(remove);
-        remove(this.player);
+        this.statics.forEach(Entities.remove);
+        this.npcs.forEach(Entities.remove);
+        Entities.remove(this.player);
     };
 
     return World;
-})(Math, H5.Vectors, H5.Promise, G.NPCState, G.UI);
+})(Math, H5.Vectors, H5.Promise, G.NPCState, G.UI, G.Entities);
