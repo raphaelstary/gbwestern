@@ -55,6 +55,7 @@ G.Entities = (function (Vectors, NPCState, Date) {
         var aimingVector = Vectors.get(shooter.x, shooter.y, target.x, target.y);
         var angle = Vectors.getAngle(aimingVector.x, aimingVector.y);
         shooter.hand.setRotation(angle);
+        shooter.setRotation(angle);
         shooter.drawable.setRotation(angle);
     }
 

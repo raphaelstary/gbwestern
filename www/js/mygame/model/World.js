@@ -85,9 +85,11 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI, Entities) {
         player.x += forceX;
         player.y += forceY;
 
-        if ((forceX != 0 || forceY != 0) && !player.hand.isAiming)
-            player.drawable.setRotation(Vectors.getAngle(forceX, forceY));
-
+        if ((forceX != 0 || forceY != 0) && !player.hand.isAiming) {
+            var angle = Vectors.getAngle(forceX, forceY);
+            player.setRotation(angle);
+            player.drawable.setRotation(angle);
+        }
         if (player.hand.isAiming) {
             var target = this.statics.concat(this.npcs).filter(Entities.isSelected)[0];
             Entities.rePositionHand(player, target);
@@ -102,15 +104,32 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI, Entities) {
     };
 
     World.prototype.__checkSight = function (entity) {
+        var self = this;
+
+        function startShooting() {
+            entity.state = NPCState.SHOOTING;
+            entity.hand.isAiming = true;
+            entity.target = self.player;
+
+            self.__shoot(entity);
+        }
+
         var vector = Vectors.get(entity.x, entity.y, this.player.x, this.player.y);
         var magnitude = Vectors.squaredMagnitude(vector.x, vector.y);
 
         if (magnitude < UI.HEIGHT * UI.HEIGHT) {
-            entity.state = NPCState.SHOOTING;
-            entity.hand.isAiming = true;
-            entity.target = this.player;
 
-            this.__shoot(entity);
+            var width = entity.getWidth() * 2;
+            if (magnitude < width * width) {
+                startShooting();
+                return;
+            }
+
+            var angle = Vectors.normalizeAngle(Vectors.toDegrees(Vectors.getAngle(vector.x, vector.y)));
+
+            if (60 > angle && angle > -60) {
+                startShooting();
+            }
         }
     };
 
