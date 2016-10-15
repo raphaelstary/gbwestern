@@ -86,7 +86,7 @@ G.World = (function (Math, Vectors, Promise, NPCState, UI, Entities) {
         player.y += forceY;
 
         if ((forceX != 0 || forceY != 0) && !player.hand.isAiming)
-            player.drawable.setRotation(Vectors.getAngle(forceX, forceY) + Vectors.toRadians(90));
+            player.drawable.setRotation(Vectors.getAngle(forceX, forceY));
 
         if (player.hand.isAiming) {
             var target = this.statics.concat(this.npcs).filter(Entities.isSelected)[0];
