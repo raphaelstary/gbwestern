@@ -1,4 +1,4 @@
-G.Camera = (function () {
+H5.Camera = (function () {
     "use strict";
 
     function Camera(viewPort, maxX, maxY) {
