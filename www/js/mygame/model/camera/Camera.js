@@ -4,10 +4,9 @@ G.Camera = (function () {
     function Camera(viewPort, maxX, maxY) {
         this.viewPort = viewPort;
 
-        // introducing a 3rd universe:
-        // 1st grid tiles (u,v)
-        // 2nd px screen coordinates (x,y)
-        // 3rd px space coordinates (x,y) 
+        // 1st universe grid tiles (u,v)
+        // 2nd universe px screen coordinates (x,y)
+        // 3rd universe px space coordinates (x,y)
         // - while screen coordinates are relative, space coordinates are an absolute representation of tiles in px
 
         this.minX = this.viewPort.getWidthHalf();
