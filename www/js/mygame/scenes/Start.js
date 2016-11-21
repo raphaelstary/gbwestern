@@ -1,4 +1,4 @@
-G.Start = (function (Event, Key) {
+G.Start = (function (Event, Key, Button, Controls) {
     "use strict";
 
     function Start(services) {
@@ -6,34 +6,20 @@ G.Start = (function (Event, Key) {
     }
 
     Start.prototype.postConstruct = function () {
-        this.itIsOver = false;
-        var self = this;
-        this.keyListener = this.events.subscribe(Event.KEY_BOARD, function (keyBoard) {
-            if (self.itIsOver)
-                return;
+        function callback() {
+            keyBoard.cancel();
+            gamePad.cancel();
+            this.nextScene();
+        }
 
-            if (keyBoard[Key.ENTER] || keyBoard[Key.SPACE]) {
-                self.itIsOver = true;
-                self.nextScene();
-            }
-        });
+        var keyBoard = Controls.getKeyBoard();
+        keyBoard.add(Key.ENTER).or(Key.SPACE).onDown(callback, this);
+        keyBoard.register(this.events);
 
-        this.gamePadListener = this.events.subscribe(Event.GAME_PAD, function (gamePad) {
-            if (self.itIsOver)
-                return;
-
-            if (gamePad.isAPressed() || gamePad.isStartPressed()) {
-                self.itIsOver = true;
-                self.nextScene();
-            }
-        });
-
-    };
-
-    Start.prototype.preDestroy = function () {
-        this.events.unsubscribe(this.keyListener);
-        this.events.unsubscribe(this.gamePadListener);
+        var gamePad = Controls.getGamePad();
+        gamePad.add(Button.A).or(Button.START).onDown(callback, this);
+        gamePad.register(this.events);
     };
 
     return Start;
-})(H5.Event, H5.Key);
+})(H5.Event, H5.Key, H5.GamePadButton, H5.PlayerControls);

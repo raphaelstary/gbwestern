@@ -42,7 +42,7 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
         this.camera.unlockPosition();
 
         var ctrl = this.controller;
-        var keyBoard = PlayerControls.getKeyBoard();
+        var keyBoard = this.keyBoard = PlayerControls.getKeyBoard();
         keyBoard.add(Key.LEFT).onDown(ctrl.handleLeftKeyDown.bind(ctrl)).onUp(ctrl.handleLeftKeyUp.bind(ctrl));
         keyBoard.add(Key.RIGHT).onDown(ctrl.handleRightKeyDown.bind(ctrl)).onUp(ctrl.handleRightKeyUp.bind(ctrl));
         keyBoard.add(Key.UP).onDown(ctrl.handleUpKeyDown.bind(ctrl)).onUp(ctrl.handleUpKeyUp.bind(ctrl));
@@ -52,7 +52,7 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
         keyBoard.add(Key.ESC).onDown(ctrl.handleMenuKey.bind(ctrl));
         keyBoard.register(this.events);
 
-        var gamePad = PlayerControls.getGamePad();
+        var gamePad = this.gamePad = PlayerControls.getGamePad();
         gamePad.add(Button.D_PAD_LEFT).onDown(ctrl.handleLeftKeyDown.bind(ctrl)).onUp(ctrl.handleLeftKeyUp.bind(ctrl));
         gamePad.add(Button.D_PAD_RIGHT).onDown(ctrl.handleRightKeyDown.bind(ctrl))
             .onUp(ctrl.handleRightKeyUp.bind(ctrl));
@@ -80,8 +80,8 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
     };
 
     Game.prototype.preDestroy = function () {
-        this.events.unsubscribe(this.keyBoardControls);
-        this.events.unsubscribe(this.gamePadControls);
+        this.keyBoard.cancel();
+        this.gamePad.cancel();
         this.events.unsubscribe(this.controls);
 
         this.events.unsubscribe(this.playerMovement);
