@@ -1,4 +1,4 @@
-G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, resolveAtlasPaths, File, UI) {
+G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, createAtlasPaths, File, UI) {
     "use strict";
 
     // your files
@@ -6,7 +6,8 @@ G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, resol
     function registerFiles(resourceLoader) {
         // add your files to the resource loader for downloading
         var isMobile = new DeviceInfo(userAgent, 1, 1, 1).isMobile;
-        AtlasResourceHelper.register(resourceLoader, atlases, isMobile, resolveAtlasPaths);
+        AtlasResourceHelper.register(resourceLoader, atlases, isMobile,
+            createAtlasPaths().add(UI.HEIGHT).getResolver());
 
         scenes = resourceLoader.addJSON(File.SCENES);
 
@@ -26,4 +27,4 @@ G.MyGameResources = (function (AtlasResourceHelper, DeviceInfo, userAgent, resol
         create: registerFiles,
         process: processFiles
     };
-})(H5.AtlasResourceHelper, H5.Device, window.navigator.userAgent, G.resolveAtlasPaths, G.File, G.UI);
+})(H5.AtlasResourceHelper, H5.Device, window.navigator.userAgent, H5.createAtlasPaths, G.File, G.UI);
