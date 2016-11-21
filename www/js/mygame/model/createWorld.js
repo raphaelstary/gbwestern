@@ -1,10 +1,14 @@
-G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, Camera, PlayerController, Scene) {
+G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, Camera, PlayerController, Scene, wrap) {
     "use strict";
 
     function createWorld(services, barrel, cards, gameOver) {
 
         var shaker = new ScreenShaker(services.device);
-        var viewPort = createViewPort(services.stage);
+        var viewPort = services.stage.createRectangle(false)
+            .setPosition(wrap(UI.WIDTH / 2), wrap(UI.HEIGHT / 2))
+            .setWidth(wrap(UI.WIDTH))
+            .setHeight(wrap(UI.HEIGHT))
+            .setShow(false);
 
         var worldData = services.scenes[Scene.WORLD];
         var maxCameraPosition = {
@@ -41,4 +45,5 @@ G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, C
     }
 
     return createWorld;
-})(G.UI, G.WorldView, G.World, H5.FixRezScreenShaker, G.createViewPort, H5.Camera, G.PlayerController, G.Scene);
+})(G.UI, G.WorldView, G.World, H5.FixRezScreenShaker, G.createViewPort, H5.Camera, G.PlayerController, G.Scene,
+    H5.wrap);
