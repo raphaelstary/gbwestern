@@ -1,4 +1,4 @@
-G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWorld) {
+G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWorld, Key, Button, PlayerControls) {
     "use strict";
 
     function Game(services) {
@@ -41,8 +41,28 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
     Game.prototype.__registerEventListeners = function () {
         this.camera.unlockPosition();
 
-        this.keyBoardControls = installPlayerKeyBoard(this.events, this.controller);
-        this.gamePadControls = installPlayerGamePad(this.events, this.controller);
+        var ctrl = this.controller;
+        var keyBoard = PlayerControls.getKeyBoard();
+        keyBoard.add(Key.LEFT).onDown(ctrl.handleLeftKeyDown.bind(ctrl)).onUp(ctrl.handleLeftKeyUp.bind(ctrl));
+        keyBoard.add(Key.RIGHT).onDown(ctrl.handleRightKeyDown.bind(ctrl)).onUp(ctrl.handleRightKeyUp.bind(ctrl));
+        keyBoard.add(Key.UP).onDown(ctrl.handleUpKeyDown.bind(ctrl)).onUp(ctrl.handleUpKeyUp.bind(ctrl));
+        keyBoard.add(Key.DOWN).onDown(ctrl.handleDownKeyDown.bind(ctrl)).onUp(ctrl.handleDownKeyUp.bind(ctrl));
+        keyBoard.add(Key.ENTER).or(Key.CTRL).onDown(ctrl.handleActionKey.bind(ctrl));
+        keyBoard.add(Key.SPACE).or(Key.ALT).onDown(ctrl.handleAltActionKey.bind(ctrl));
+        keyBoard.add(Key.ESC).onDown(ctrl.handleMenuKey.bind(ctrl));
+        keyBoard.register(this.events);
+
+        var gamePad = PlayerControls.getGamePad();
+        gamePad.add(Button.D_PAD_LEFT).onDown(ctrl.handleLeftKeyDown.bind(ctrl)).onUp(ctrl.handleLeftKeyUp.bind(ctrl));
+        gamePad.add(Button.D_PAD_RIGHT).onDown(ctrl.handleRightKeyDown.bind(ctrl))
+            .onUp(ctrl.handleRightKeyUp.bind(ctrl));
+        gamePad.add(Button.D_PAD_UP).onDown(ctrl.handleUpKeyDown.bind(ctrl)).onUp(ctrl.handleUpKeyUp.bind(ctrl));
+        gamePad.add(Button.D_PAD_DOWN).onDown(ctrl.handleDownKeyDown.bind(ctrl)).onUp(ctrl.handleDownKeyUp.bind(ctrl));
+        gamePad.add(Button.A).onDown(ctrl.handleActionKey.bind(ctrl));
+        gamePad.add(Button.B).or(Button.X).onDown(ctrl.handleAltActionKey.bind(ctrl));
+        gamePad.add(Button.START).onDown(ctrl.handleMenuKey.bind(ctrl));
+        gamePad.register(this.events);
+
         this.controls = this.events.subscribe(Event.TICK_POST_INPUT, this.controller.update.bind(this.controller));
 
         this.playerMovement = this.events.subscribe(Event.TICK_MOVE, this.world.updatePlayer.bind(this.world));
@@ -78,4 +98,5 @@ G.Game = (function (Event, installPlayerGamePad, installPlayerKeyBoard, createWo
     };
 
     return Game;
-})(H5.Event, G.installPlayerGamePad, G.installPlayerKeyBoard, G.createWorld);
+})(H5.Event, G.installPlayerGamePad, G.installPlayerKeyBoard, G.createWorld, H5.Key, H5.GamePadButton,
+    H5.PlayerControls);
