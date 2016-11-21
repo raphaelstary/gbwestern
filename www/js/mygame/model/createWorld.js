@@ -41,4 +41,4 @@ G.createWorld = (function (UI, WorldView, World, ScreenShaker, createViewPort, C
     }
 
     return createWorld;
-})(G.UI, G.WorldView, G.World, H5.FixRezScreenShaker, G.createViewPort, G.Camera, G.PlayerController, G.Scene);
+})(G.UI, G.WorldView, G.World, H5.FixRezScreenShaker, G.createViewPort, H5.Camera, G.PlayerController, G.Scene);
